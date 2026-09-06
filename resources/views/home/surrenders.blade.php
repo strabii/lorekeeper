@@ -9,6 +9,10 @@
     Surrenders
 </h1>
 
+    <div class="text-right mb-3">
+        <a href="{{ url('surrenders/new') }}" class="btn btn-danger">New Surrender</a>
+    </div>
+
 {!! Form::open(['method' => 'GET', 'class' => 'form-inline justify-content-end']) !!}
     <div class="form-inline justify-content-end">
         <div class="form-group ml-3 mb-3">

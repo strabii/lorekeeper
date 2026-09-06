@@ -30,6 +30,17 @@
                     </tr>
                 @endforeach
             </tbody>
+            <tbody id="adoptions" class="sortable">
+                <tr class="sort-item">
+                    <td>
+                        <i class="fas fa-house-chimney-user fa-fw handle mr-3"></i>
+                        <a href="{{ $adoptions->url }}">{{ $adoptions->name }}</a>
+                    </td>
+                    <td class="text-right">
+                        <a href="{{ url('admin/data/adoptions') }}" class="btn btn-primary">Edit</a>
+                    </td>
+                </tr>
+            </tbody>
 
         </table>
         <div class="mb-4">

@@ -16,6 +16,7 @@ use App\Models\Adoption\AdoptionCurrency;
 use App\Models\Character\Character;
 use App\Models\Character\CharacterCategory;
 use App\Models\Currency\Currency;
+use App\Models\Shop\Shop;
 
 class AdoptionController extends Controller
 {
@@ -38,11 +39,21 @@ class AdoptionController extends Controller
     {
         $adoption = Adoption::where('id', 1)->where('is_active', 1)->first();
         if(!$adoption) abort(404);
+
+        if (Auth::check() && Auth::user()->isStaff) {
+            $stock = AdoptionStock::visible()->get();
+        } else {
+            $stock = AdoptionStock::visible()->whereHas('character', function ($query) {
+                $query->where('is_visible', 1);
+            })->with('character')->get();
+        }
+
         return view('adoptions.adoption', [
             'adoption' => $adoption,
             'adoptions' => Adoption::where('is_active', 1)->get(),
             'currencies' => Currency::whereIn('id', AdoptionCurrency::pluck('currency_id')->toArray())->get()->keyBy('id'),
-            'stocks' => AdoptionStock::visible()->get()
+            'stocks' => $stock,
+            'shops'      => Shop::where('is_active', 1)->orderBy('sort', 'DESC')->get(),
         ]);
     }
 
@@ -93,8 +104,8 @@ class AdoptionController extends Controller
     {
         return view('adoptions.purchase_history', [
             'logs' => Auth::user()->getAdoptionLogs(0),
-            'adoptions' => Adoption::where('is_active', 1)->get(),
-            'adoption' => Adoption::find(1)
+            'adoption' => Adoption::orderBy('id', 'ASC')->first(),
+            'shops'      => Shop::where('is_active', 1)->orderBy('sort', 'DESC')->get(),
         ]);
     }
 }

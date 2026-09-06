@@ -11,7 +11,7 @@
     <div class="card-body">
         <div class="form-group">
             {!! Form::label('character_id', 'Character') !!}
-            {!! Form::select('character_id', $characters, null, ['class' => 'form-control stock-field', 'data-name' => 'character_id']) !!}
+            {!! Form::select('character_id', $characters, null, ['class' => 'form-control stock-field selectize', 'data-name' => 'character_id']) !!}
         </div>
 
         <div><a href="#" class="btn btn-primary mb-3" id="add-feature">Add Currency</a></div>
@@ -35,6 +35,10 @@
             {!! Form::checkbox('is_visible', 1, 1, ['class' => 'form-check-input', 'data-toggle' => 'toggle']) !!}
             {!! Form::label('is_visible', 'Set Viewable', ['class' => 'form-check-label ml-3']) !!} {!! add_help('If turned off, the item will not be visible to regular users.') !!}
         </div>
+        <div class="form-group">
+            {!! Form::label('cooldown', 'Transfer Cooldown (days)') !!}
+            {!! Form::text('cooldown', 0, ['class' => 'form-control']) !!}
+        </div>
         <div class="text-right">
             {!! Form::submit('Edit', ['class' => 'btn btn-primary']) !!}
         </div>
@@ -57,7 +61,9 @@
 @parent
 <script>
 $( document ).ready(function() {
-$('#add-feature').on('click', function(e) {
+    $('.selectize').selectize();
+
+    $('#add-feature').on('click', function(e) {
         e.preventDefault();
         addFeatureRow();
     });

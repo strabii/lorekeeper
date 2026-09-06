@@ -3,10 +3,11 @@
 @section('admin-title') Adoptions @endsection
 
 @section('admin-content')
-{!! breadcrumbs(['Admin Panel' => 'admin', 'Adoptions' => 'admin/data/adoptions',  'Edit Adoption' => 'admin/data/adoptions/edit/'.$adoption->id]) !!}
+{!! breadcrumbs(['Admin Panel' => 'admin', 'Shops' => 'admin/data/shops',  'Edit Adoption' => 'admin/data/adoptions/edit/'.$adoption->id]) !!}
 
 <h1>
     Edit Adoption
+    ({!! $adoption->displayName !!})
 </h1>
 
 {!! Form::open(['url' => 'admin/data/adoptions/edit/'.$adoption->id, 'files' => true]) !!}

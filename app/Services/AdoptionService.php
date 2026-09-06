@@ -41,12 +41,14 @@ class AdoptionService extends Service
 
         try {
             // More specific validation
-            if(Adoption::where('name', $data['name'])->where('id', '!=', $adoption->id)->exists()) throw new \Exception("The name has already been taken.");
+            if (Adoption::where('name', $data['name'])->where('id', '!=', $adoption->id)->exists()) {
+                throw new \Exception('The name has already been taken.');
+            }
 
             $data = $this->populateAdoptionData($data, $adoption);
 
             $image = null;            
-            if(isset($data['image']) && $data['image']) {
+            if (isset($data['image']) && $data['image']) {
                 $data['has_image'] = 1;
                 $image = $data['image'];
                 unset($data['image']);
@@ -54,7 +56,9 @@ class AdoptionService extends Service
 
             $adoption->update($data);
 
-            if ($adoption) $this->handleImage($image, $adoption->adoptionImagePath, $adoption->adoptionImageFileName);
+            if ($adoption) {
+                $this->handleImage($image, $adoption->adoptionImagePath, $adoption->adoptionImageFileName);
+            }
 
             return $this->commitReturn($adoption);
         } catch(\Exception $e) { 
@@ -76,16 +80,33 @@ class AdoptionService extends Service
         DB::beginTransaction();
 
         try {
+            $adoption = Adoption::orderBy('id', 'ASC')->first();
 
-            if(!$data['cost']) throw new \Exception("The character is missing a cost.");
+            if (!isset($data['cost'])) {
+                throw new \Exception('The character is missing a cost.');
+            }
+            if (!isset($data['currency_id'])) {
+                throw new \Exception('The character is missing a currency type.');
+            }
             // Validation
-            $data['adoption_id'] = 1;
-            if(!isset($data['use_user_bank'])) $data['use_user_bank'] = 0;
-            if(!isset($data['use_character_bank'])) $data['use_character_bank'] = 0;
-            if(!isset($data['is_visible'])) $data['is_visible'] = 0;
+            $data['adoption_id'] = $adoption->id;
+            if (!isset($data['use_user_bank'])) {
+                $data['use_user_bank'] = 0;
+            }
+            if (!isset($data['use_character_bank'])) {
+                $data['use_character_bank'] = 0;
+            }
+            if (!isset($data['is_visible'])) {
+                $data['is_visible'] = 0;
+            }
+            if (!isset($data['cooldown'])) {
+                $data['cooldown'] = 0;
+            }
 
-            $stock = AdoptionStock::create(array_only($data, ['adoption_id', 'character_id', 'use_user_bank', 'use_character_bank', 'is_visible']));
-            if(AdoptionStock::where('character_id', $data['character_id'])->where('id', '!=', $stock->id)->exists()) throw new \Exception("This character is already in another stock!");
+            $stock = AdoptionStock::create(array_only($data, ['adoption_id', 'character_id', 'use_user_bank', 'use_character_bank', 'is_visible', 'cooldown']));
+            if (AdoptionStock::where('character_id', $data['character_id'])->where('id', '!=', $stock->id)->exists()) {
+                throw new \Exception('This character is already in another stock!');
+            }
 
             $this->popCreationCosts(array_only($data, ['currency_id', 'cost']), $stock);
 
@@ -110,21 +131,34 @@ class AdoptionService extends Service
         DB::beginTransaction();
 
         try {
-            if(!$data['cost']) throw new \Exception("The character is missing a cost.");
-            if(!$data['currency_id']) throw new \Exception("The character is missing a currency type.");
-            if(AdoptionStock::where('character_id', $data['character_id'])->where('id', '!=', $id)->exists()) throw new \Exception("This character is already in another stock!");
+            if (!isset($data['cost'])) {
+                throw new \Exception('The character is missing a cost.');
+            }
+            if (!isset($data['currency_id'])) {
+                throw new \Exception('The character is missing a currency type.');
+            }
+            if (AdoptionStock::where('character_id', $data['character_id'])->where('id', '!=', $id)->exists()) {
+                throw new \Exception('This character is already in another stock!');
+            }
 
-            if(!isset($data['is_visible'])) $data['is_visible'] = 0;
+            if (!isset($data['is_visible'])) {
+                $data['is_visible'] = 0;
+            }
+            if (!isset($data['cooldown'])) {
+                $data['cooldown'] = 0;
+            }
             
             $this->populateCosts(array_only($data, ['currency_id', 'cost']), $id);
 
             $stock = AdoptionStock::find($id);
+            $adoption = Adoption::orderBy('id', 'ASC')->first();
 
-            $stock->adoption_id = 1;
+            $stock->adoption_id = $adoption->id;
             $stock->character_id = $data['character_id'];
             $stock->use_user_bank = isset($data['use_user_bank']);
             $stock->use_character_bank = isset($data['use_character_bank']);
             $stock->is_visible = $data['is_visible'];
+            $stock->cooldown = $data['cooldown'];
             $stock->save();
 
             return $this->commitReturn($adoption);
@@ -172,7 +206,9 @@ class AdoptionService extends Service
 
             try {
 
-                if(!$id) throw new \Exception("This stock doesn't exist");
+                if (!$id) {
+                    throw new \Exception("This stock doesn't exist");
+                }
 
                 $adoptionStock = AdoptionStock::find($id);
 
@@ -202,13 +238,12 @@ class AdoptionService extends Service
         $stocks->currency()->delete();
 
         $currency = array_unique($data['currency_id']);
-        if(isset($currency)) {
-            foreach($currency as $key => $type)
-            {
+        if (isset($currency)) {
+            foreach ($currency as $key => $type) {
                 AdoptionCurrency::create([
                     'stock_id'       => $id,
-                    'currency_id' => $type,
-                    'cost'   => $data['cost'][$key],
+                    'currency_id'    => $type,
+                    'cost'           => $data['cost'][$key],
                 ]);
             }
         }
@@ -223,23 +258,21 @@ class AdoptionService extends Service
      * @return array
      */
     private function popCreationCosts($data, $id) {
-
-        if(is_array($data['currency_id'])) {
-        $currency = array_unique($data['currency_id']);
-        foreach($currency as $key => $type)
+        if (is_array($data['currency_id'])) {
+            $currency = array_unique($data['currency_id']);
+            foreach ($currency as $key => $type) {
                 AdoptionCurrency::create([
                     'stock_id'       => $id->id,
-                    'currency_id' => $type,
-                    'cost'   => $data['cost'][$key],
+                    'currency_id'    => $type,
+                    'cost'           => $data['cost'][$key],
                 ]);
             }
-        
-        else {
+        } else {
             $currency = $data['currency_id'];
             AdoptionCurrency::create([
                 'stock_id'       => $id->id,
-                'currency_id' => $data['currency_id'],
-                'cost'   => $data['cost'],
+                'currency_id'    => $data['currency_id'],
+                'cost'           => $data['cost'],
             ]);
         }
     }

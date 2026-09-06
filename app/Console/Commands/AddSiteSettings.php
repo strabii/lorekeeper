@@ -57,6 +57,8 @@ class AddSiteSettings extends Command {
 
         $this->addSiteSetting('calculate_by_traits', 0, '0: Characters must have currency be added manually, 1: Characters are valued automaticall by traits. THIS MUST BE HARDCODED. The controller has been commented for ease.');
 
+        $this->addSiteSetting('adoption_center_cooldown', 3, 'Default cooldown (in months) users will enter after adopting from the adoption center.');
+
         $this->addSiteSetting('is_design_updates_open', 1, '0: Characters cannot be submitted for design update approval, 1: Characters can be submitted for design update approval.');
 
         $this->addSiteSetting('blacklist_privacy', 0, 'Who can view the blacklist? 0: Admin only, 1: Staff only, 2: Members only, 3: Public.');

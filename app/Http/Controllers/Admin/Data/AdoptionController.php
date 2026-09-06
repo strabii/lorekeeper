@@ -50,7 +50,13 @@ class AdoptionController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      */
     public function getStockIndex() {
+        $adoption = Adoption::orderBy('id', 'ASC')->first();
+        if (!$adoption) {
+            abort(404);
+        }
+
         return view('admin.adoptions.stocks', [
+            'adoption'   => $adoption,
             'stock' => AdoptionStock::get(),
             'adoptioncenter' => User::find(intval(Settings::get('adopts_user'))),
         ]);
@@ -66,7 +72,10 @@ class AdoptionController extends Controller
      */
     public function getEditStock($id) {
         $stock = AdoptionStock::find($id);
-        if(!$stock) abort(404);
+        if (!$stock) {
+            abort(404);
+        }
+
         return view('admin.adoptions._edit_stock', [
             'stock' => $stock,
             'characters' => Character::orderBy('id')->get()->where('user_id', intval(Settings::get('adopts_user')))->pluck('fullname', 'id'),
@@ -98,7 +107,10 @@ class AdoptionController extends Controller
     public function getEditAdoption($id)
     {
         $adoption = Adoption::find($id);
-        if(!$adoption) abort(404);
+        if (!$adoption) {
+            abort(404);
+        }
+
         return view('admin.adoptions.create_edit_adoption', [
             'adoption' => $adoption,
             'characters' => Character::orderBy('id')->get()->where('user_id', intval(Settings::get('adopts_user')))->pluck('fullname', 'id'),
@@ -140,7 +152,7 @@ class AdoptionController extends Controller
     public function postCreateStock(Request $request, AdoptionService $service)
     {
         $data = $request->only([
-            'adoption_id', 'character_id', 'currency_id', 'cost', 'use_user_bank', 'use_character_bank', 'is_visible'
+            'adoption_id', 'character_id', 'currency_id', 'cost', 'use_user_bank', 'use_character_bank', 'is_visible', 'cooldown',
         ]);
 
         if($service->createAdoptionStock(Adoption::find(1), $data)) {
@@ -185,7 +197,7 @@ class AdoptionController extends Controller
     public function postEditAdoptionStock(Request $request, AdoptionService $service, $id)
     {
         $data = $request->only([
-             'adoption_id', 'character_id', 'currency_id', 'cost', 'use_user_bank', 'use_character_bank', 'is_visible'
+             'adoption_id', 'character_id', 'currency_id', 'cost', 'use_user_bank', 'use_character_bank', 'is_visible', 'cooldown',
         ]);
 
         if($service->updateAdoptionStock(Adoption::find(1), $data, $id)) {

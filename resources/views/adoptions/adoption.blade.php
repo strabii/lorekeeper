@@ -3,6 +3,9 @@
 @section('title') {{ $adoption->name }} @endsection
 
 @section('content')
+    @if(Auth::check() && Auth::user()->hasPower('edit_data'))
+        <a data-toggle="tooltip" title="[ADMIN] Edit Adoption Stock" href="{{ url('admin/data/stock') }}" class="mb-2 float-right"><i class="fas fa-crown"></i></a>
+    @endif
 {!! breadcrumbs([$adoption->name => $adoption->url]) !!}
 
 <h1>
@@ -12,6 +15,17 @@
 <div class="text-center">
     <img src="{{ $adoption->adoptionImageUrl }}" />
     <p>{!! $adoption->parsed_description !!}</p>
+
+    @if (Auth::check())
+        @foreach ($currencies as $adoptCurrency)
+            @if(Auth::user()->getAdoptionShopCooldownAttribute($adoptCurrency->id))
+                @if (!Auth::user()->isStaff && $adoptCurrency->is_staff_currency == 1)
+                @else
+                    <p class="alert alert-warning">You can adopt another character with <b>{{ $adoptCurrency->name }} {!! $adoptCurrency->DisplayIcon !!}</b> on {!! format_date(Auth::user()->getAdoptionShopCooldownAttribute($adoptCurrency->id), false) !!}. That's {!! pretty_date(Auth::user()->getAdoptionShopCooldownAttribute($adoptCurrency->id)) !!}!</p>
+                @endif
+            @endif
+        @endforeach
+    @endif
 </div>
 
 @if(!count($stocks))

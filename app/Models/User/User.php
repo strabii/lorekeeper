@@ -474,6 +474,39 @@ class User extends Authenticatable implements MustVerifyEmail {
             return true;
         }
     }
+
+    /**
+     * Check if user can adopt from the adoption shop.
+     *
+     * @return Carbon
+     */
+    public function getAdoptionShopCooldownAttribute($currencyId = null)
+    {
+        $user = $this;
+
+        if ($currencyId == null) {
+            // Fetch log for most recent adoption
+            $query = AdoptionLog::where('user_id', $this->id)->orderBy('id', 'DESC')->first();
+
+        } else {
+            // If there is a currency ID sent back, filter the logs by the currency and fetch most recent adoption
+            $query = AdoptionLog::where('user_id', $this->id)->where('currency_id', $currencyId)->orderBy('id', 'DESC')->first();
+        }
+
+        // If there is no log, by default, the cooldown is null
+        if (!$query) {
+            return null;
+        }
+
+        $expiryTime = $query->created_at->addMonths(Settings::get('adoption_center_cooldown') ?? 0);
+        // If the cooldown would already be up, it is null
+        if($expiryTime <= Carbon::now()) {
+            return null;
+        }
+        // Otherwise, calculate the remaining time
+        return $expiryTime;
+    }
+
     /**********************************************************************************************
 
         OTHER FUNCTIONS
@@ -608,8 +641,11 @@ class User extends Authenticatable implements MustVerifyEmail {
     {
         $user = $this;
         $query = AdoptionLog::where('user_id', $this->id)->with('character')->with('adoption')->with('adopt')->with('currency')->orderBy('id', 'DESC');
-        if($limit) return $query->take($limit)->get();
-        else return $query->paginate(30);
+        if ($limit) {
+            return $query->take($limit)->get();
+        } else {
+            return $query->paginate(30);
+        }
     }
 
 

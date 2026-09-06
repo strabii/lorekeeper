@@ -3,7 +3,7 @@
 @else
     <div class="text-center mb-3">
         <div class="mb-1"><a href="{{ $stock->character->url }}"><img src="{{ $stock->character->image->imageUrl }}" class="mw-100" /></a></div>
-        <h5>{!! $stock->character->displayName !!}</h5>
+        <h5>@if (!$stock->character->is_visible) <i class="fas fa-eye-slash mr-1"></i> @endif{!! $stock->character->displayName !!}</h5>
         <strong>Adoption Fee:</strong>
         @if($stock->currency->count() > 1)
             <?php 

@@ -13,6 +13,8 @@ use App\Models\Adoption\AdoptionLog;
 use App\Models\Adoption\AdoptionCurrency;
 use App\Models\User\User;
 use App\Services\CharacterManager;
+use App\Models\Currency\Currency;
+use App\Models\Rank\Rank;
 
 class AdoptionManager extends Service
 {
@@ -39,15 +41,30 @@ class AdoptionManager extends Service
         try {
             // Check that the adoption exists and is open
             $adoption = Adoption::where('id', $data['adoption_id'])->where('is_active', 1)->first();
-            if(!$adoption) throw new \Exception("Invalid adoption selected.");
+            if (!$adoption) {
+                throw new \Exception('Invalid adoption selected.');
+            }
+
+            if (!isset($data['currency_id'])) {
+                throw new \Exception('Please select a currency to pay with.');
+            }
+
+            // Check that the user hasn't adopted from the shop before the cooldown ends
+            if($user->getAdoptionShopCooldownAttribute($data['currency_id'])) {
+                throw new \Exception("You are still on cooldown before you can adopt a new character using ".Currency::find($data['currency_id'])->name.". Please try again later.");
+            }
 
             // Check that the stock exists and belongs to the adoption
             $adoptionStock = AdoptionStock::where('id', $data['stock_id'])->where('adoption_id', $data['adoption_id'])->with('currency')->with('character')->first();
             $adoptionCurrency = AdoptionCurrency::where('stock_id', $data['stock_id'])->where('currency_id', $data['currency_id'])->first();
-            if(!$adoptionStock) throw new \Exception("Invalid character selected.");
+            if (!$adoptionStock) {
+                throw new \Exception('Invalid character selected.');
+            }
 
             // Check if the character has a quantity, and if it does, check there is stock remaining
-            if($adoptionStock->is_limited_stock && $adoptionStock->quantity < 1) throw new \Exception("This character is no longer available.");
+            if ($adoptionStock->is_limited_stock && $adoptionStock->quantity < 1) {
+                throw new \Exception('This character is no longer available.');
+            }
 
             $character = null;
             if($data['bank'] == 'character')
@@ -56,25 +73,34 @@ class AdoptionManager extends Service
                 // - stock must be purchaseable with characters
                 // - currency must be character-held
                 // - character has enough currency
-                if(!$adoptionStock->use_character_bank || !$adoptionCurrency->currency->is_character_owned) throw new \Exception("You cannot use a character's bank to pay for this character.");
-                if(!$data['slug']) throw new \Exception("Please enter a character code.");
+                if (!$adoptionStock->use_character_bank || !$adoptionCurrency->currency->is_character_owned) {
+                    throw new \Exception("You cannot use a character's bank to pay for this character.");
+                }
+                if (!$data['slug']) {
+                    throw new \Exception('Please enter a character code.');
+                }
                 $character = Character::where('slug', $data['slug'])->first();
-                if(!$character) throw new \Exception("Please enter a valid character code.");
-                if(!(new CurrencyManager)->debitCurrency($character, null, 'Adoption Purchase', 'Purchased '.$adoptionStock->character->slug.' from '.$adoption->name, $adoptionCurrency->currency, $adoptionCurrency->cost)) throw new \Exception("Not enough currency to make this purchase.");
-            }
-            else
-            {
+                if (!$character) {
+                    throw new \Exception('Please enter a valid character code.');
+                }
+                if (!(new CurrencyManager)->debitCurrency($character, null, 'Adoption Purchase', 'Purchased '.$adoptionStock->character->slug.' from '.$adoption->name, $adoptionCurrency->currency, $adoptionCurrency->cost)) {
+                    throw new \Exception('Not enough currency to make this purchase.');
+                }
+            } else {
                 // If the user is paying by themselves
                 // - stock must be purchaseable by users
                 // - currency must be user-held
                 // - user has enough currency
-                if(!$adoptionStock->use_user_bank || !$adoptionCurrency->currency->is_user_owned) throw new \Exception("You cannot use your user bank to pay for this character.");
-                if($adoptionCurrency->cost > 0 && !(new CurrencyManager)->debitCurrency($user, null, 'Adoption Purchase', 'Purchased '.$adoptionStock->character->slug.' from '.$adoption->name, $adoptionCurrency->currency, $adoptionCurrency->cost)) throw new \Exception("Not enough currency to make this purchase.");
+                if (!$adoptionStock->use_user_bank || !$adoptionCurrency->currency->is_user_owned) {
+                    throw new \Exception('You cannot use your user bank to pay for this character.');
+                }
+                if ($adoptionCurrency->cost > 0 && !(new CurrencyManager)->debitCurrency($user, null, 'Adoption Purchase', 'Purchased '.$adoptionStock->character->slug.' from '.$adoption->name, $adoptionCurrency->currency, $adoptionCurrency->cost)) {
+                    throw new \Exception('Not enough currency to make this purchase.');
+                }
             }
 
             // If the character has a limited quantity, decrease the quantity
-            if($adoptionStock->is_limited_stock) 
-            {
+            if ($adoptionStock->is_limited_stock) {
                 $adoptionStock->quantity--;
                 $adoptionStock->save();
             }
@@ -95,11 +121,15 @@ class AdoptionManager extends Service
             // doing stuff manually because why not and because hopefully no one ever looks here
             $data = [];
             $data['recipient_id'] = $user->id;
-            $data['reason'] = 'Bought from adoption center';
+            $data['reason'] = 'Bought for '.$adoptionCurrency->cost.' '.$adoptionCurrency->currency->name;
+            $data['cooldown'] = $adoptionStock->cooldown;
             $adopt = Character::find($adoptionStock->character_id);
-            $admin = User::find(1);
+            //there's a chance the adoption center user isn't an admin, so
+            //using the same logic as SetupAdminUser instead
+            $adminRank = Rank::orderBy('sort', 'DESC')->first();
+            $admin = User::where('rank_id', $adminRank->id)->first();
             
-            if(!(new CharacterManager)->adminTransfer($data, $adopt, $admin)) {
+            if (!(new CharacterManager)->adminTransfer($data, $adopt, $admin)) {
                 throw new \Exception("Failed to transfer character.");
             }
 

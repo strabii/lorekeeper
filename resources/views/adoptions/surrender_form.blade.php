@@ -3,14 +3,14 @@
 @section('title') Surrender Character @endsection
 
 @section('content')
-{!! breadcrumbs([$adoption->name => 'adoptions', 'Surrender' => 'surrender']) !!}
+{!! breadcrumbs([$adoption->name => 'adoptions', 'Surrenders' => 'surrenders', 'Surrender' => 'surrender']) !!}
 <h1>
     Surrender Character
 </h1>
 @if(!Settings::get('is_surrenders_open'))
 <div class="alert alert-danger">Surrenders are currently closed</div>
 @else
-<div class="alert alert-warning">Please note that by surrendering your characters you acknowledge they will be sold for onsite currency and retrieval after the form has been approved may not be possible</div>
+<div class="alert alert-warning">Please note that by surrendering your characters you acknowledge they will be sold for on-site currency and retrieval after the form has been approved may not be possible</div>
 
 {!! Form::open(['url' => 'surrenders/new/post']) !!}
 
@@ -18,7 +18,7 @@
     <div class="card-body">
         <div class="form-group">
             {!! Form::label('character_id', 'Character') !!}
-            {!! Form::select('character_id', $characters, null, ['class' => 'form-control stock-field', 'data-name' => 'character_id']) !!}
+            {!! Form::select('character_id', $characters, null, ['class' => 'form-control stock-field default character-select', 'data-name' => 'character_id']) !!}
         </div>
         <div class="form-group">
             {!! Form::label('notes', 'Additional Notes (optional)') !!}
@@ -39,4 +39,11 @@
 </div>
 {!! Form::close() !!}
 @endif
+@endsection
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            $('.default.character-select').selectize();
+        });
+    </script>
 @endsection
