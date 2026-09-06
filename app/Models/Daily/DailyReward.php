@@ -94,15 +94,15 @@ class DailyReward extends Model
                 return (isset($this->reward()->first()->currencyImageUrl)) ? $this->reward()->first()->currencyImageUrl : '/images/currency.png';
             //uncomment if you use awards, may still have to edit the loot select blade files
             /**case 'Award':
-                return $this->belongsTo('App\Models\Award\Award', 'rewardable_id');
+                return (isset($this->reward()->first()->imageUrl)) ? $this->reward()->first()->imageUrl : '/images/awards.png';
                 break;**/
             case 'LootTable':
                 return '/images/loot.png';
                 break;
             //uncomment if you use pets, may still have to edit the loot select blade files
             /**case 'Pet':
-                return $this->belongsTo('App\Models\Pet\Pet', 'rewardable_id');**/
-            break;
+                return (isset($this->reward()->first()->imageUrl)) ? $this->reward()->first()->imageUrl : '/images/characters.png';
+                break;**/
             case 'Raffle':
                 return '/images/raffle.png';
             break;

@@ -36,8 +36,22 @@ class DailyController extends Controller
      */
     public function getIndex()
     {
+        $daily = Daily::where('is_active', 1)->orderBy('sort', 'DESC')->get();
+
+        if (Auth::user()) {
+            $userDaily = DailyTimer::where('user_id', Auth::user()->id)->where('is_limited', 1)->get();
+            if (count($userDaily) > 1) {
+                $daily = Daily::where('is_active', 1)->whereNot(function ($query) {
+                    $query
+                    ->where('is_timed_daily', 1)
+                    ->where('is_loop', 0)
+                    ->where('id', DailyTimer::where('user_id', Auth::user()->id)->where('is_limited', 1)->get()->pluck('daily_id'));
+                })->orderBy('sort', 'DESC')->get();
+            }
+        }
+
         return view('dailies.index', [
-            'dailies' => Daily::where('is_active', 1)->orderBy('sort', 'DESC')->get()
+            'dailies' => $daily,
         ]);
     }
 
@@ -50,14 +64,28 @@ class DailyController extends Controller
     public function getDaily($id, DailyManager $service)
     {
         $daily = Daily::where('id', $id)->where('is_active', 1)->first();
-        if(!$daily) abort(404);
-        $timer = (Auth::user()) ? DailyTimer::where('daily_id', $daily->id)->where("user_id", Auth::user()->id)->first() : null;
 
-        
+        $dailies = Daily::where('is_active', 1)->orderBy('sort', 'DESC')->get();
+        if (Auth::user()) {
+            $userDaily = DailyTimer::where('user_id', Auth::user()->id)->where('is_limited', 1)->get();
+            if (count($userDaily) > 1) {
+                $dailies = Daily::where('is_active', 1)->whereNot(function ($query) {
+                    $query
+                    ->where('is_timed_daily', 1)
+                    ->where('is_loop', 0)
+                    ->where('id', DailyTimer::where('user_id', Auth::user()->id)->where('is_limited', 1)->get()->pluck('daily_id'));
+                })->orderBy('sort', 'DESC')->get();
+            }
+        }
+
+        if (!$daily) {
+            abort(404);
+        }
+        $timer = (Auth::user()) ? DailyTimer::where('daily_id', $daily->id)->where('user_id', Auth::user()->id)->first() : null;
         
         return view('dailies.dailies', [
             'daily' => $daily,
-            'dailies' => Daily::where('is_active', 1)->orderBy('sort', 'DESC')->get(),
+            'dailies' => $dailies,
             'timer' => $timer,
             'cooldown' => $service->getDailyCooldown($daily, $timer)
         ]);

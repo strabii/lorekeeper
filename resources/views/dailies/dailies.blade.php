@@ -20,6 +20,12 @@
 </h4>
 @endif
 
+@if ((isset($daily->is_timed_daily) && $daily->is_timed_daily) && !$daily->is_loop && (isset(App\Models\Daily\DailyTimer::where('daily_id', $daily->id)->where('user_id', Auth::user()->id)->first()->step) && (Auth::user() && App\Models\Daily\DailyTimer::where('daily_id', $daily->id)->where('user_id', Auth::user()->id)->first()->step >= $daily->maxStep)))
+    <h6 class="alert alert-info mb-0">
+        Congrats, you've collected all the limited rewards! This page will now be hidden from the index.
+    </h6>
+    @php $isDisabled = true; @endphp
+@endif
 
 @if($daily->type == 'Wheel' && $daily->wheel)
 @include('dailies._wheel_daily', ['wheel' => $daily->wheel])

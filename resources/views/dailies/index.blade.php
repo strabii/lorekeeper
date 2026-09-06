@@ -9,6 +9,7 @@
 {{ucfirst(__('dailies.dailies'))}}
 </h1>
 
+@if (count($dailies))
 <div class="row shops-row">
     @foreach($dailies as $daily)
     
@@ -25,5 +26,10 @@
 
     @endforeach
 </div>
+@else
+    <div class="col card py-2 alert-info mb-3 text-center">
+        Looks like there are no dailies right now!
+    </div>
+@endif
 
 @endsection
