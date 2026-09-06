@@ -48,19 +48,19 @@
                 <div class="col-md-10 col-8">{!! format_date($submission->created_at) !!} ({{ $submission->created_at->diffForHumans() }})</div>
             </div>
             @if ($submission->url)
-            <div class="row mb-2 no-gutters">
-                <div class="col-md-2 col-3">
-                    <h5>URL</h5>
+                <div class="row mb-2 no-gutters">
+                    <div class="col-md-2 col-3">
+                        <h5>URL</h5>
+                    </div>
+                    <div class="col-md-10 col-9">
+                        <div class="px-2 alert alert-light"><a href="{{ $submission->url }}">{{ $submission->url }}</a></div>
+                        @if ($submission->imageOfUrl)
+                            <div class="text-center">
+                                {!! $submission->imageOfUrl !!}
+                            </div>
+                        @endif
+                    </div>
                 </div>
-                <div class="col-md-10 col-9">
-                    <div class="px-2 alert alert-light"><a href="{{ $submission->url }}">{{ $submission->url }}</a></div>
-                    @if ($submission->imageOfUrl)
-                        <div class="text-center">
-                            {!! $submission->imageOfUrl !!}
-                        </div>
-                    @endif
-                </div>
-            </div>
             @endif
             @if (config('lorekeeper.settings.allow_gallery_submissions_on_prompts') && (isset($submission->data['gallery_submission_id']) && $submission->data['gallery_submission_id']))
                 <div class="row mb-2 no-gutters">
@@ -70,12 +70,12 @@
                     <div class="col-12 col-md-10 px-2 alert alert-light">
 
                         @if ($submission->gallerySubmission->imageUrl)
-                        <div class="text-center">
-                            <img src="{{ $submission->gallerySubmission->imageUrl }}" style="max-height:500px; max-width:50%;">
-                        </div>
+                            <div class="text-center">
+                                <img src="{{ $submission->gallerySubmission->imageUrl }}" style="max-height:500px; max-width:50%;">
+                            </div>
                         @endif
                         {!! $submission->gallerySubmission->imageUrl && $submission->gallerySubmission->parsed_text ? '<br>' : '' !!}
-                        @if($submission->gallerySubmission->parsed_text)
+                        @if ($submission->gallerySubmission->parsed_text)
                             {!! $submission->gallerySubmission->parsed_text ?? '' !!}
                             <p class="rounded alert-dark px-2 py-1 mb-0 float-right">Word Count: {{ str_word_count(strip_tags($submission->gallerySubmission->parsed_text)) }}</p>
                         @endif

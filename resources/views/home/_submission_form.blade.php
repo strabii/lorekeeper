@@ -41,7 +41,7 @@
         @endif
         <div class="col-md-{{ config('lorekeeper.settings.allow_gallery_submissions_on_prompts') && !$isClaim ? '6 pl-0 pl-sm-2' : '12' }}">
             <div class="form-group">
-                {!! Form::label('url', $isClaim ? 'URL (Optional)' : 'Submission URL ' . (config('lorekeeper.settings.allow_gallery_submissions_on_prompts') ? ' (Optional)' : '') ) !!}
+                {!! Form::label('url', $isClaim ? 'URL (Optional)' : 'Submission URL ' . (config('lorekeeper.settings.allow_gallery_submissions_on_prompts') ? ' (Optional)' : '')) !!}
                 @if ($isClaim)
                     {!! add_help('Enter a URL relevant to your claim (for example, a comment proving you may make this claim). Download or invalid URLs will be rejected.') !!}
                 @else
@@ -54,9 +54,9 @@
             </div>
         </div>
         @if (config('lorekeeper.settings.allow_gallery_submissions_on_prompts') && !$isClaim)
-        <div class="mx-auto">
-            <div id="gallery-preview" class="mb-3"></div>
-        </div>
+            <div class="mx-auto">
+                <div id="gallery-preview" class="mb-3"></div>
+            </div>
         @endif
     </div>
 </div>

@@ -146,7 +146,6 @@
                             $galleryPreview.load('{{ url('submissions/new/gallery/') }}/' + 0);
                         }
                     });
-
                 @endif
 
                 $confirmButton.on('click', function(e) {

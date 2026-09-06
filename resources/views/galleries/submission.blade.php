@@ -26,12 +26,10 @@
                         'type' => 'submit',
                     ]) !!}
                 @endif
-                @if ($submission->user->id == Auth::user()->id || ($submission->collaborators->count() && ($submission->getGalleryCollaboratorCount(true) != 0) ))
-                    @if ($submission->attachedPromptActive && (
-                        !$submission->promptSubmissions->count() || ($submission->collaborators->count() && 
-                        ($submission->getGalleryCollaboratorCount() != $submission->promptSubmissions->count()))
-                    ))
-                        <a class="btn btn-success" href="/submissions/new?prompt_id={{ $submission->prompt_id }}&gallery_submission_id={{ $submission->id }}" data-toggle="tooltip" title="Don't forget to submit your prompt to the queue for your rewards!"><i class="fas fa-palette"></i> Submit to Prompt</a>
+                @if ($submission->user->id == Auth::user()->id || ($submission->collaborators->count() && $submission->getGalleryCollaboratorCount(true) != 0))
+                    @if ($submission->attachedPromptActive && (!$submission->promptSubmissions->count() || ($submission->collaborators->count() && $submission->getGalleryCollaboratorCount() != $submission->promptSubmissions->count())))
+                        <a class="btn btn-success" href="/submissions/new?prompt_id={{ $submission->prompt_id }}&gallery_submission_id={{ $submission->id }}" data-toggle="tooltip" title="Don't forget to submit your prompt to the queue for your rewards!"><i
+                                class="fas fa-palette"></i> Submit to Prompt</a>
                     @endif
                 @endif
                 @if ($submission->user->id == Auth::user()->id || Auth::user()->hasPower('manage_submissions'))
