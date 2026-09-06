@@ -16,9 +16,9 @@
         @endauth
     @endif
 
-        <li class="sidebar-section">
-            <div class="sidebar-section-header">Shops</div>
-            @if (!Request::is('surrenders/new'))
+    <li class="sidebar-section">
+        <div class="sidebar-section-header">Shops</div>
+        @if (!Request::is('surrenders/new'))
             @foreach ($shops as $shop)
                 @if ($shop->is_staff)
                     @if (auth::check() && auth::user()->isstaff)
@@ -28,9 +28,9 @@
                     <div class="sidebar-item"><a href="{{ $shop->url }}" class="{{ set_active('shops/' . $shop->id) }}">{{ $shop->name }}</a></div>
                 @endif
             @endforeach
-            @endif
-            <div class="sidebar-item"><a href="{{ url('adoptions') }}" class="{{ set_active('adoptions') }}">{{ $name }}</a></div>
-        </li>
+        @endif
+        <div class="sidebar-item"><a href="{{ url('adoptions') }}" class="{{ set_active('adoptions') }}">{{ $name }}</a></div>
+    </li>
 
     @auth
         <li class="sidebar-section">
