@@ -2,9 +2,9 @@
 
 namespace App\Models\Submission;
 
+use App\Models\Gallery\GallerySubmission;
 use App\Models\Model;
 use App\Models\Prompt\Prompt;
-use App\Models\Gallery\GallerySubmission;
 use App\Models\User\User;
 use Carbon\Carbon;
 
@@ -183,7 +183,7 @@ class Submission extends Model {
         if (!$this->id) {
             return null;
         }
-        
+
         return json_decode($this->attributes['data'], true);
     }
 
@@ -237,6 +237,7 @@ class Submission extends Model {
         if (str_contains($this->url, '.png') || str_contains($this->url, '.jpeg') || str_contains($this->url, '.jpg') || str_contains($this->url, '.gif') || str_contains($this->url, '.webp')) {
             return '<a href="'.$this->url.'" rel="noopener noreferrer" target="_blank"><img src="'.$this->url.'" class=" img-thumbnail" style="max-height:500px; max-width:50%;"></a>';
         }
+
         return null;
     }
 

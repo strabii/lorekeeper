@@ -351,5 +351,5 @@ return [
     |
     */
     'allow_gallery_submissions_on_prompts'              => 1,
-    
+
 ];

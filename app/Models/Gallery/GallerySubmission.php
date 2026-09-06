@@ -656,13 +656,15 @@ class GallerySubmission extends Model {
     /**
      * Gets a GalleryCollaborator count associated with this gallery submission.
      *
+     * @param mixed $user
+     *
      * @return array
      */
     public function getGalleryCollaboratorCount($user = false) {
         if ($user == true) {
             return count(GalleryCollaborator::where('gallery_submission_id', $this->id)->where('user_id', Auth::user()->id)->where('has_approved', 1)->get());
         }
+
         return count(GalleryCollaborator::where('gallery_submission_id', $this->id)->where('has_approved', 1)->get());
     }
-
 }
