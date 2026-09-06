@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Adoption\Adoption;
 use App\Models\Currency\Currency;
 use App\Models\Item\Item;
 use App\Models\Item\ItemCategory;
@@ -10,7 +11,6 @@ use App\Models\Shop\ShopLog;
 use App\Models\Shop\ShopStock;
 use App\Models\User\UserItem;
 use App\Services\ShopManager;
-use App\Models\Adoption\Adoption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,7 +31,7 @@ class ShopController extends Controller {
      */
     public function getIndex() {
         return view('shops.index', [
-            'shops' => Shop::where('is_active', 1)->orderBy('sort', 'DESC')->get(),
+            'shops'     => Shop::where('is_active', 1)->orderBy('sort', 'DESC')->get(),
             'adoptions' => Adoption::orderBy('id', 'ASC')->first(),
         ]);
     }
@@ -63,7 +63,7 @@ class ShopController extends Controller {
             'items'      => $items,
             'shops'      => Shop::where('is_active', 1)->orderBy('sort', 'DESC')->get(),
             'currencies' => Currency::whereIn('id', ShopStock::where('shop_id', $shop->id)->pluck('currency_id')->toArray())->get()->keyBy('id'),
-            'adoptions' => Adoption::orderBy('id', 'ASC')->first(),
+            'adoptions'  => Adoption::orderBy('id', 'ASC')->first(),
         ]);
     }
 

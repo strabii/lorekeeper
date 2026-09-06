@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Admin\Data;
 
 use App\Http\Controllers\Controller;
+use App\Models\Adoption\Adoption;
 use App\Models\Currency\Currency;
 use App\Models\Item\Item;
 use App\Models\Shop\Shop;
 use App\Services\ShopService;
-use App\Models\Adoption\Adoption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,7 +28,7 @@ class ShopController extends Controller {
      */
     public function getIndex() {
         return view('admin.shops.shops', [
-            'shops' => Shop::orderBy('sort', 'DESC')->get(),
+            'shops'     => Shop::orderBy('sort', 'DESC')->get(),
             'adoptions' => Adoption::orderBy('id', 'ASC')->first(),
         ]);
     }

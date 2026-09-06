@@ -1,23 +1,18 @@
-<?php namespace App\Services;
+<?php
 
-use App\Services\Service;
+namespace App\Services;
 
-use DB;
-use Config;
-use Settings;
-
-use App\Models\Character\Character;
 use App\Models\Adoption\Adoption;
-use App\Models\Adoption\AdoptionStock;
-use App\Models\Adoption\AdoptionLog;
 use App\Models\Adoption\AdoptionCurrency;
-use App\Models\User\User;
-use App\Services\CharacterManager;
+use App\Models\Adoption\AdoptionLog;
+use App\Models\Adoption\AdoptionStock;
+use App\Models\Character\Character;
 use App\Models\Currency\Currency;
 use App\Models\Rank\Rank;
+use App\Models\User\User;
+use DB;
 
-class AdoptionManager extends Service
-{
+class AdoptionManager extends Service {
     /*
     |--------------------------------------------------------------------------
     | Adoption Manager
@@ -30,12 +25,12 @@ class AdoptionManager extends Service
     /**
      * Buys an character from a adoption.
      *
-     * @param  array                 $data
-     * @param  \App\Models\User\User $user
-     * @return bool|App\Models\Adoption\Adoption
+     * @param array $data
+     * @param User  $user
+     *
+     * @return App\Models\Adoption\Adoption|bool
      */
-    public function buyStock($data, $user)
-    {
+    public function buyStock($data, $user) {
         DB::beginTransaction();
 
         try {
@@ -50,8 +45,8 @@ class AdoptionManager extends Service
             }
 
             // Check that the user hasn't adopted from the shop before the cooldown ends
-            if($user->getAdoptionShopCooldownAttribute($data['currency_id'])) {
-                throw new \Exception("You are still on cooldown before you can adopt a new character using ".Currency::find($data['currency_id'])->name.". Please try again later.");
+            if ($user->getAdoptionShopCooldownAttribute($data['currency_id'])) {
+                throw new \Exception('You are still on cooldown before you can adopt a new character using '.Currency::find($data['currency_id'])->name.'. Please try again later.');
             }
 
             // Check that the stock exists and belongs to the adoption
@@ -67,8 +62,7 @@ class AdoptionManager extends Service
             }
 
             $character = null;
-            if($data['bank'] == 'character')
-            {
+            if ($data['bank'] == 'character') {
                 // Check if the user is using a character to pay
                 // - stock must be purchaseable with characters
                 // - currency must be character-held
@@ -109,38 +103,38 @@ class AdoptionManager extends Service
 
             // Add a purchase log
             $adoptionLog = AdoptionLog::create([
-                'adoption_id' => $adoption->id, 
-                'character_id' => $character ? $character->id : null, 
-                'user_id' => $user->id, 
-                'currency_id' => $adoptionCurrency->currency->id, 
-                'cost' => $adoptionCurrency->cost, 
-                'adopt_id' => $adoptionStock->character_id, 
-                'quantity' => $quantity
+                'adoption_id'  => $adoption->id,
+                'character_id' => $character ? $character->id : null,
+                'user_id'      => $user->id,
+                'currency_id'  => $adoptionCurrency->currency->id,
+                'cost'         => $adoptionCurrency->cost,
+                'adopt_id'     => $adoptionStock->character_id,
+                'quantity'     => $quantity,
             ]);
-            
+
             // doing stuff manually because why not and because hopefully no one ever looks here
             $data = [];
             $data['recipient_id'] = $user->id;
             $data['reason'] = 'Bought for '.$adoptionCurrency->cost.' '.$adoptionCurrency->currency->name;
             $data['cooldown'] = $adoptionStock->cooldown;
             $adopt = Character::find($adoptionStock->character_id);
-            //there's a chance the adoption center user isn't an admin, so
-            //using the same logic as SetupAdminUser instead
+            // there's a chance the adoption center user isn't an admin, so
+            // using the same logic as SetupAdminUser instead
             $adminRank = Rank::orderBy('sort', 'DESC')->first();
             $admin = User::where('rank_id', $adminRank->id)->first();
-            
+
             if (!(new CharacterManager)->adminTransfer($data, $adopt, $admin)) {
-                throw new \Exception("Failed to transfer character.");
+                throw new \Exception('Failed to transfer character.');
             }
 
             $adoptionStock->delete();
             AdoptionCurrency::where('stock_id', $adoptionStock->id)->delete();
 
             return $this->commitReturn($adoption);
-        } catch(\Exception $e) { 
+        } catch (\Exception $e) {
             $this->setError('error', $e->getMessage());
         }
+
         return $this->rollbackReturn(false);
     }
-
 }

@@ -1,17 +1,13 @@
-<?php namespace App\Services;
+<?php
 
-use App\Services\Service;
-
-use DB;
-use Config;
-use Settings;
+namespace App\Services;
 
 use App\Models\Adoption\Adoption;
-use App\Models\Adoption\AdoptionStock;
 use App\Models\Adoption\AdoptionCurrency;
+use App\Models\Adoption\AdoptionStock;
+use DB;
 
-class AdoptionService extends Service
-{
+class AdoptionService extends Service {
     /*
     |--------------------------------------------------------------------------
     | Adoption Service
@@ -22,21 +18,21 @@ class AdoptionService extends Service
     */
 
     /**********************************************************************************************
-     
+
         ADOPTIONS
 
     **********************************************************************************************/
-    
+
     /**
      * Updates a adoption.
      *
-     * @param  \App\Models\Adoption\Adoption  $adoption
-     * @param  array                  $data 
-     * @param  \App\Models\User\User  $user
-     * @return bool|\App\Models\Adoption\Adoption
+     * @param Adoption              $adoption
+     * @param array                 $data
+     * @param \App\Models\User\User $user
+     *
+     * @return Adoption|bool
      */
-    public function updateAdoption($adoption, $data, $user)
-    {
+    public function updateAdoption($adoption, $data, $user) {
         DB::beginTransaction();
 
         try {
@@ -47,7 +43,7 @@ class AdoptionService extends Service
 
             $data = $this->populateAdoptionData($data, $adoption);
 
-            $image = null;            
+            $image = null;
             if (isset($data['image']) && $data['image']) {
                 $data['has_image'] = 1;
                 $image = $data['image'];
@@ -61,22 +57,22 @@ class AdoptionService extends Service
             }
 
             return $this->commitReturn($adoption);
-        } catch(\Exception $e) { 
+        } catch (\Exception $e) {
             $this->setError('error', $e->getMessage());
         }
+
         return $this->rollbackReturn(false);
     }
 
     /**
      * Creates adoption stock.
      *
-     * @param  \App\Models\Adoption\Adoption  $adoption
-     * @param  array                  $data 
-     * @param  \App\Models\User\User  $user
-     * @return bool|\App\Models\Adoption\Adoption
+     * @param Adoption $adoption
+     * @param array    $data
+     *
+     * @return Adoption|bool
      */
-    public function createAdoptionStock($adoption, $data)
-    {
+    public function createAdoptionStock($adoption, $data) {
         DB::beginTransaction();
 
         try {
@@ -111,23 +107,23 @@ class AdoptionService extends Service
             $this->popCreationCosts(array_only($data, ['currency_id', 'cost']), $stock);
 
             return $this->commitReturn($adoption);
-        } catch(\Exception $e) { 
+        } catch (\Exception $e) {
             $this->setError('error', $e->getMessage());
         }
+
         return $this->rollbackReturn(false);
     }
-    
+
     /**
      * Updates adoption stock.
      *
-     * @param  \App\Models\Adoption\Adoption  $adoption
-     * @param  array                  $data 
-     * @param  \App\Models\User\User  $user
-     * @return bool|\App\Models\Adoption\Adoption
+     * @param Adoption $adoption
+     * @param array    $data
+     * @param mixed    $id
+     *
+     * @return Adoption|bool
      */
-    public function updateAdoptionStock($adoption, $data, $id)
-    {
-
+    public function updateAdoptionStock($adoption, $data, $id) {
         DB::beginTransaction();
 
         try {
@@ -147,7 +143,7 @@ class AdoptionService extends Service
             if (!isset($data['cooldown'])) {
                 $data['cooldown'] = 0;
             }
-            
+
             $this->populateCosts(array_only($data, ['currency_id', 'cost']), $id);
 
             $stock = AdoptionStock::find($id);
@@ -162,30 +158,60 @@ class AdoptionService extends Service
             $stock->save();
 
             return $this->commitReturn($adoption);
-        } catch(\Exception $e) { 
+        } catch (\Exception $e) {
             $this->setError('error', $e->getMessage());
         }
+
+        return $this->rollbackReturn(false);
+    }
+
+    /**
+     * Deletes stock.
+     *
+     * @param mixed $id
+     *
+     * @return array
+     */
+    public function deleteStock($id) {
+        DB::beginTransaction();
+
+        try {
+            if (!$id) {
+                throw new \Exception("This stock doesn't exist");
+            }
+
+            $adoptionStock = AdoptionStock::find($id);
+
+            $adoptionStock->delete();
+
+            AdoptionCurrency::where('stock_id', $id)->delete();
+
+            return $this->commitReturn($id);
+        } catch (\Exception $e) {
+            $this->setError('error', $e->getMessage());
+        }
+
         return $this->rollbackReturn(false);
     }
 
     /**
      * Processes user input for creating/updating a adoption.
      *
-     * @param  array                  $data 
-     * @param  \App\Models\Adoption\Adoption  $adoption
+     * @param array    $data
+     * @param Adoption $adoption
+     *
      * @return array
      */
-    private function populateAdoptionData($data, $adoption = null)
-    {
-        if(isset($data['description']) && $data['description']) $data['parsed_description'] = parse($data['description']);
+    private function populateAdoptionData($data, $adoption = null) {
+        if (isset($data['description']) && $data['description']) {
+            $data['parsed_description'] = parse($data['description']);
+        }
         $data['is_active'] = isset($data['is_active']);
-        
-        if(isset($data['remove_image']))
-        {
-            if($adoption && $adoption->has_image && $data['remove_image']) 
-            { 
-                $data['has_image'] = 0; 
-                $this->deleteImage($adoption->adoptionImagePath, $adoption->adoptionImageFileName); 
+
+        if (isset($data['remove_image'])) {
+            if ($adoption && $adoption->has_image && $data['remove_image']) {
+                $data['has_image'] = 0;
+                $this->deleteImage($adoption->adoptionImagePath, $adoption->adoptionImageFileName);
             }
             unset($data['remove_image']);
         }
@@ -194,45 +220,14 @@ class AdoptionService extends Service
     }
 
     /**
-     * Deletes stock
+     * Processes currencies for use to buy.
      *
-     * @param  array                  $data 
-     * @param  \App\Models\Adoption\Adoption  $adoption
-     * @return array
-     */
-    public function deleteStock($id) {
-        
-        DB::beginTransaction();
-
-            try {
-
-                if (!$id) {
-                    throw new \Exception("This stock doesn't exist");
-                }
-
-                $adoptionStock = AdoptionStock::find($id);
-
-                $adoptionStock->delete();
-                
-                AdoptionCurrency::where('stock_id', $id)->delete();
-
-                return $this->commitReturn($id);
-
-            } catch(\Exception $e) { 
-                $this->setError('error', $e->getMessage());
-        }
-            return $this->rollbackReturn(false);
-    }
-
-    /**
-     * Processes currencies for use to buy
+     * @param array $data
+     * @param mixed $id
      *
-     * @param  array                  $data 
-     * @param  \App\Models\Adoption\Adoption  $adoption
      * @return array
      */
     private function populateCosts($data, $id) {
-
         $stocks = AdoptionStock::find($id);
         // Delete existing currencies to prevent overlaps etc
         $stocks->currency()->delete();
@@ -247,14 +242,14 @@ class AdoptionService extends Service
                 ]);
             }
         }
-
     }
 
     /**
-     * Processes currencies for use to buy
+     * Processes currencies for use to buy.
      *
-     * @param  array                  $data 
-     * @param  \App\Models\Adoption\Adoption  $adoption
+     * @param array $data
+     * @param mixed $id
+     *
      * @return array
      */
     private function popCreationCosts($data, $id) {
@@ -276,5 +271,4 @@ class AdoptionService extends Service
             ]);
         }
     }
-            
 }

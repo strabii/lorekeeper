@@ -30,7 +30,7 @@ class HomeController extends Controller {
         $galleryCurrencyAwards = Settings::get('gallery_submissions_reward_currency');
 
         return view('admin.index', [
-            'surrenderCount' => Surrender::where('status', 'Pending')->count(),
+            'surrenderCount'         => Surrender::where('status', 'Pending')->count(),
             'submissionCount'        => Submission::where('status', 'Pending')->whereNotNull('prompt_id')->count(),
             'claimCount'             => Submission::where('status', 'Pending')->whereNull('prompt_id')->count(),
             'designCount'            => CharacterDesignUpdate::characters()->where('status', 'Pending')->count(),

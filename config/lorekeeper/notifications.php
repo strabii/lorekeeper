@@ -321,16 +321,16 @@ return [
 
     // SURRENDER_ACCEPTED
     218 => [
-        'name' => 'Surrender Approved',
+        'name'    => 'Surrender Approved',
         'message' => 'Your surrender (#{surrender_id}) was approved by <a href="{staff_url}">{staff_name}</a>. (<a href="{url}">View Surrender</a>)',
-        'url' => 'surrender/view/{surrender_id}'
+        'url'     => 'surrender/view/{surrender_id}',
     ],
 
     // surrenders_REJECTED
     219 => [
-        'name' => 'Surrender Rejected',
+        'name'    => 'Surrender Rejected',
         'message' => 'Your surrender (#{surrender_id}) was rejected by <a href="{staff_url}">{staff_name}</a>. (<a href="{url}">View Surrender</a>)',
-        'url' => 'surrender/view/{surrender_id}'
+        'url'     => 'surrender/view/{surrender_id}',
     ],
 
     // REPORT_ASSIGNED

@@ -2,15 +2,13 @@
 
 namespace App\Models\User;
 
+use App\Models\Adoption\AdoptionLog;
 use App\Models\Character\Character;
 use App\Models\Character\CharacterBookmark;
 use App\Models\Character\CharacterImageCreator;
 use App\Models\Comment\CommentLike;
 use App\Models\Currency\Currency;
 use App\Models\Currency\CurrencyLog;
-use App\Models\Adoption\AdoptionLog;
-use App\Models\User\UserCharacterLog;
-use App\Models\Submission\SubmissionCharacter;
 use App\Models\Gallery\GalleryCollaborator;
 use App\Models\Gallery\GalleryFavorite;
 use App\Models\Gallery\GallerySubmission;
@@ -478,16 +476,16 @@ class User extends Authenticatable implements MustVerifyEmail {
     /**
      * Check if user can adopt from the adoption shop.
      *
+     * @param mixed|null $currencyId
+     *
      * @return Carbon
      */
-    public function getAdoptionShopCooldownAttribute($currencyId = null)
-    {
+    public function getAdoptionShopCooldownAttribute($currencyId = null) {
         $user = $this;
 
         if ($currencyId == null) {
             // Fetch log for most recent adoption
             $query = AdoptionLog::where('user_id', $this->id)->orderBy('id', 'DESC')->first();
-
         } else {
             // If there is a currency ID sent back, filter the logs by the currency and fetch most recent adoption
             $query = AdoptionLog::where('user_id', $this->id)->where('currency_id', $currencyId)->orderBy('id', 'DESC')->first();
@@ -500,9 +498,10 @@ class User extends Authenticatable implements MustVerifyEmail {
 
         $expiryTime = $query->created_at->addMonths(Settings::get('adoption_center_cooldown') ?? 0);
         // If the cooldown would already be up, it is null
-        if($expiryTime <= Carbon::now()) {
+        if ($expiryTime <= Carbon::now()) {
             return null;
         }
+
         // Otherwise, calculate the remaining time
         return $expiryTime;
     }
@@ -634,11 +633,11 @@ class User extends Authenticatable implements MustVerifyEmail {
     /**
      * Get the user's adopt purchase logs.
      *
-     * @param  int  $limit
-     * @return \Illuminate\Support\Collection|\Illuminate\Pagination\LengthAwarePaginator
+     * @param int $limit
+     *
+     * @return \Illuminate\Pagination\LengthAwarePaginator|\Illuminate\Support\Collection
      */
-    public function getAdoptionLogs($limit = 10)
-    {
+    public function getAdoptionLogs($limit = 10) {
         $user = $this;
         $query = AdoptionLog::where('user_id', $this->id)->with('character')->with('adoption')->with('adopt')->with('currency')->orderBy('id', 'DESC');
         if ($limit) {
@@ -647,7 +646,6 @@ class User extends Authenticatable implements MustVerifyEmail {
             return $query->paginate(30);
         }
     }
-
 
     /**
      * Get the user's character ownership logs.
