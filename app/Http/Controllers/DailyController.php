@@ -2,24 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Auth;
-use \Datetime;
-
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-
-use App\Services\DailyManager;
-
 use App\Models\Daily\Daily;
 use App\Models\Daily\DailyTimer;
-use App\Models\Item\Item;
-use App\Models\Item\ItemTag;
-use App\Models\Currency\Currency;
-use App\Models\Item\ItemCategory;
-use App\Models\User\UserItem;
+use App\Services\DailyManager;
+use Auth;
+use Illuminate\Http\Request;
 
-class DailyController extends Controller
-{
+class DailyController extends Controller {
     /*
     |--------------------------------------------------------------------------
     | Daily Controller
@@ -34,8 +23,7 @@ class DailyController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function getIndex()
-    {
+    public function getIndex() {
         $daily = Daily::where('is_active', 1)->orderBy('sort', 'DESC')->get();
 
         if (Auth::user()) {
@@ -43,9 +31,9 @@ class DailyController extends Controller
             if (count($userDaily) > 1) {
                 $daily = Daily::where('is_active', 1)->whereNot(function ($query) {
                     $query
-                    ->where('is_timed_daily', 1)
-                    ->where('is_loop', 0)
-                    ->where('id', DailyTimer::where('user_id', Auth::user()->id)->where('is_limited', 1)->get()->pluck('daily_id'));
+                        ->where('is_timed_daily', 1)
+                        ->where('is_loop', 0)
+                        ->where('id', DailyTimer::where('user_id', Auth::user()->id)->where('is_limited', 1)->get()->pluck('daily_id'));
                 })->orderBy('sort', 'DESC')->get();
             }
         }
@@ -58,11 +46,11 @@ class DailyController extends Controller
     /**
      * Shows a Daily.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function getDaily($id, DailyManager $service)
-    {
+    public function getDaily($id, DailyManager $service) {
         $daily = Daily::where('id', $id)->where('is_active', 1)->first();
 
         $dailies = Daily::where('is_active', 1)->orderBy('sort', 'DESC')->get();
@@ -71,9 +59,9 @@ class DailyController extends Controller
             if (count($userDaily) > 1) {
                 $dailies = Daily::where('is_active', 1)->whereNot(function ($query) {
                     $query
-                    ->where('is_timed_daily', 1)
-                    ->where('is_loop', 0)
-                    ->where('id', DailyTimer::where('user_id', Auth::user()->id)->where('is_limited', 1)->get()->pluck('daily_id'));
+                        ->where('is_timed_daily', 1)
+                        ->where('is_loop', 0)
+                        ->where('id', DailyTimer::where('user_id', Auth::user()->id)->where('is_limited', 1)->get()->pluck('daily_id'));
                 })->orderBy('sort', 'DESC')->get();
             }
         }
@@ -82,60 +70,58 @@ class DailyController extends Controller
             abort(404);
         }
         $timer = (Auth::user()) ? DailyTimer::where('daily_id', $daily->id)->where('user_id', Auth::user()->id)->first() : null;
-        
+
         return view('dailies.dailies', [
-            'daily' => $daily,
-            'dailies' => $dailies,
-            'timer' => $timer,
-            'cooldown' => $service->getDailyCooldown($daily, $timer)
+            'daily'    => $daily,
+            'dailies'  => $dailies,
+            'timer'    => $timer,
+            'cooldown' => $service->getDailyCooldown($daily, $timer),
         ]);
     }
 
-
-
     /**
      * Handles a daily roll.
-     * 
-     * @param  \Illuminate\Http\Request  $request
-     * @param  App\Services\DailyService  $service
+     *
+     * @param App\Services\DailyService $service
+     *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function postRoll(Request $request, DailyManager $service)
-    {
+    public function postRoll(Request $request, DailyManager $service) {
         $request->validate(DailyTimer::$createRules);
         // Check that the daily exists and is open
         $daily = Daily::where('id', $request['daily_id'])->where('is_active', 1)->first();
-        if (!$daily) throw new \Exception("Invalid " . __('dailies.daily') . " selected.");
+        if (!$daily) {
+            throw new \Exception('Invalid '.__('dailies.daily').' selected.');
+        }
 
-        
-        if($daily->type == 'Wheel'){
+        if ($daily->type == 'Wheel') {
             $wheelSegment = random_int(1, $daily->wheel->segment_number);
             $rewards = $service->rollDaily($daily, Auth::user(), $wheelSegment);
         } else {
             $rewards = $service->rollDaily($daily, Auth::user());
         }
 
-        if(!$rewards) {
-            foreach($service->errors()->getMessages()['error'] as $error) flash($error)->error();
+        if (!$rewards) {
+            foreach ($service->errors()->getMessages()['error'] as $error) {
+                flash($error)->error();
+            }
         } else {
             $rolledRewards = 0;
-            foreach($rewards as $rewardList){
-                foreach($rewardList as $reward){
+            foreach ($rewards as $rewardList) {
+                foreach ($rewardList as $reward) {
                     $rolledRewards += 1;
-                    flash('You received '.$reward['quantity'].'x '.$reward['asset']->name."!");
+                    flash('You received '.$reward['quantity'].'x '.$reward['asset']->name.'!');
                 }
             }
-            if($rolledRewards <= 0) flash('You received nothing. Better luck next time!');
+            if ($rolledRewards <= 0) {
+                flash('You received nothing. Better luck next time!');
+            }
         }
 
-        if(!$request->ajax()){
+        if (!$request->ajax()) {
             return redirect()->back();
         } else {
             return $wheelSegment;
         }
-
     }
-
 }
-
-
