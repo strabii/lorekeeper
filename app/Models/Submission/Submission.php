@@ -4,6 +4,7 @@ namespace App\Models\Submission;
 
 use App\Models\Model;
 use App\Models\Prompt\Prompt;
+use App\Models\Gallery\GallerySubmission;
 use App\Models\User\User;
 use Carbon\Carbon;
 
@@ -179,6 +180,10 @@ class Submission extends Model {
      * @return array
      */
     public function getDataAttribute() {
+        if (!$this->id) {
+            return null;
+        }
+        
         return json_decode($this->attributes['data'], true);
     }
 
@@ -223,6 +228,19 @@ class Submission extends Model {
     }
 
     /**
+     * Get an image URL out of the URL if is image of the submission/claim.
+     *
+     * @return string
+     */
+    public function getImageOfUrlAttribute() {
+        // png,jpeg,jpg,gif,webp only
+        if (str_contains($this->url, '.png') || str_contains($this->url, '.jpeg') || str_contains($this->url, '.jpg') || str_contains($this->url, '.gif') || str_contains($this->url, '.webp')) {
+            return '<a href="'.$this->url.'" rel="noopener noreferrer" target="_blank"><img src="'.$this->url.'" class=" img-thumbnail" style="max-height:500px; max-width:50%;"></a>';
+        }
+        return null;
+    }
+
+    /**
      * Get the rewards for the submission/claim.
      *
      * @return array
@@ -246,5 +264,16 @@ class Submission extends Model {
         }
 
         return $rewards;
+    }
+
+    /**
+     * Gets the gallery submission (if there is one).
+     */
+    public function getGallerySubmissionAttribute() {
+        if (!config('lorekeeper.settings.allow_gallery_submissions_on_prompts') || !isset($this->data['gallery_submission_id'])) {
+            return null;
+        }
+
+        return GallerySubmission::find($this->data['gallery_submission_id'] ?? null);
     }
 }

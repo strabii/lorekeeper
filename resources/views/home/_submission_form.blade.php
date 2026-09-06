@@ -25,13 +25,40 @@
 @endif
 
 <div class="form-group">
-    {!! Form::label('url', $isClaim ? 'URL (Optional)' : 'Submission URL (Optional)') !!}
-    @if ($isClaim)
-        {!! add_help('Enter a URL relevant to your claim (for example, a comment proving you may make this claim).') !!}
-    @else
-        {!! add_help('Enter the URL of your submission (whether uploaded to dA or some other hosting service).') !!}
-    @endif
-    {!! Form::text('url', isset($submission->url) ? $submission->url : old('url') ?? Request::get('url'), ['class' => 'form-control', 'required']) !!}
+    <div class="row no-gutters">
+        @if (config('lorekeeper.settings.allow_gallery_submissions_on_prompts') && !$isClaim)
+            <div class="col-md-6">
+                <div class="form-group">
+                    {!! Form::label('gallery_submission_id', 'Gallery Submission (Optional)') !!}
+                    {!! add_help('Select the gallery submission this prompt is for.') !!}
+                    {!! Form::select('gallery_submission_id', $userGallerySubmissions, $submission->data['gallery_submission_id'] ?? (old('gallery_submission_id') ?? Request::get('gallery_submission_id')), [
+                        'class' => 'form-control selectize',
+                        'id' => 'gallery_submission_id',
+                        'placeholder' => 'Select Your Gallery Submission',
+                    ]) !!}
+                </div>
+            </div>
+        @endif
+        <div class="col-md-{{ config('lorekeeper.settings.allow_gallery_submissions_on_prompts') && !$isClaim ? '6 pl-0 pl-sm-2' : '12' }}">
+            <div class="form-group">
+                {!! Form::label('url', $isClaim ? 'URL (Optional)' : 'Submission URL ' . (config('lorekeeper.settings.allow_gallery_submissions_on_prompts') ? ' (Optional)' : '') ) !!}
+                @if ($isClaim)
+                    {!! add_help('Enter a URL relevant to your claim (for example, a comment proving you may make this claim). Download or invalid URLs will be rejected.') !!}
+                @else
+                    {!! add_help(
+                        'Enter the URL of your submission (whether uploaded to TH or some other hosting service). Download or invalid URLs will be rejected.' .
+                            (config('lorekeeper.settings.allow_gallery_submissions_on_prompts') ? ' Alternatively, if you are selecting a gallery submission from the dropdown, this field can be left blank.' : ''),
+                    ) !!}
+                @endif
+                {!! Form::text('url', isset($submission->url) ? $submission->url : old('url') ?? Request::get('url'), ['class' => 'form-control', 'required']) !!}
+            </div>
+        </div>
+        @if (config('lorekeeper.settings.allow_gallery_submissions_on_prompts') && !$isClaim)
+        <div class="mx-auto">
+            <div id="gallery-preview" class="mb-3"></div>
+        </div>
+        @endif
+    </div>
 </div>
 
 <div class="form-group">

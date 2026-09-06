@@ -91,7 +91,13 @@
                         </div>
                         <div class="col-6 {{ !$isClaims ? 'col-md-3' : 'col-md-4' }}">
                             <div class="logs-table-cell">
-                                <span class="ubt-texthide"><a href="{{ $submission->url }}">{{ $submission->url }}</a></span>
+                                <span class="ubt-texthide">
+                                    @if ($submission->gallerySubmission)
+                                        <a class="btn btn-sm btn-light" href="{{ $submission->gallerySubmission->url }}">Gallery Submission #{{ $submission->gallerySubmission->id }}</a>
+                                    @else
+                                        <a href="{{ $submission->url }}">{{ $submission->url }}</a>
+                                    @endif
+                                </span>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">

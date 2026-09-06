@@ -500,7 +500,7 @@ class Character extends Model {
      * @return \Illuminate\Pagination\LengthAwarePaginator
      */
     public function getSubmissions() {
-        return Submission::with('user.rank')->with('prompt')->where('status', 'Approved')->whereIn('id', SubmissionCharacter::where('character_id', $this->id)->pluck('submission_id')->toArray())->paginate(30);
+        return Submission::with('user.rank')->with('prompt')->where('status', 'Approved')->whereIn('id', SubmissionCharacter::where('character_id', $this->id)->pluck('submission_id')->toArray())->orderBy('id', 'DESC')->paginate(30);
 
         // Untested
         // $character = $this;

@@ -24,7 +24,7 @@
             The {{ $isClaim ? 'claim' : 'submission' }} queue is currently closed. You cannot make a new {{ $isClaim ? 'claim' : 'submission' }} at this time.
         </div>
     @else
-        @include('home._submission_form', ['submission' => $submission])
+        @include('home._submission_form', ['submission' => $submission, 'userGallerySubmissions' => $userGallerySubmissions])
         <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">
 
@@ -93,12 +93,41 @@
                 var $draftSubmit = $('#draftSubmit');
 
                 @if (!$isClaim)
+                    const promptIdURL = window.location.search;
+                    const promptIdParams = new URLSearchParams(promptIdURL);
+                    var $promptId = parseInt(promptIdParams.get("prompt_id"), 10);
+                    var $galleryId = parseInt(promptIdParams.get("gallery_submission_id"), 10);
+
                     var $prompt = $('#prompt');
                     var $rewards = $('#rewards');
+                    var $gallery = $('#gallery_submission_id');
+                    var $galleryPreview = $('#gallery-preview');
+
+                    if ($prompt.val() != '' || $promptId != null) {
+                        $promptVal = $prompt.val() ?? $promptId ?? null;
+                        $rewards.load('{{ url('submissions/new/prompt') }}/' + $promptVal);
+                        if ($gallery.val() != '' || $galleryId != null) {
+                            $galleryVal = $gallery.val() ?? $galleryId ?? null;
+                            $galleryPreview.load('{{ url('submissions/new/gallery/') }}/' + $galleryVal);
+                        }
+                    }
 
                     $prompt.selectize();
                     $prompt.on('change', function(e) {
-                        $rewards.load('{{ url('submissions/new/prompt') }}/' + $(this).val());
+                        if ($(this).val() != '') {
+                            $rewards.load('{{ url('submissions/new/prompt') }}/' + $(this).val());
+                        } else {
+                            $rewards.load('{{ url('submissions/new/prompt') }}/' + 0);
+                        }
+                    });
+
+                    $gallery.selectize();
+                    $gallery.on('change', function(e) {
+                        if ($(this).val() != '') {
+                            $galleryPreview.load('{{ url('submissions/new/gallery/') }}/' + $(this).val());
+                        } else {
+                            $galleryPreview.load('{{ url('submissions/new/gallery/') }}/' + 0);
+                        }
                     });
                 @endif
 

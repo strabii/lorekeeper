@@ -404,6 +404,10 @@ class GalleryController extends Controller {
         } elseif (!$id && $gallery = $service->createSubmission($data, $currencyFormData, Auth::user())) {
             flash('Submission created successfully.')->success();
 
+            if ($gallery->status == 'Accepted') {
+                return redirect()->to('gallery/view/'.$gallery->id);
+            }
+
             return redirect()->to('gallery/submissions/pending');
         } else {
             foreach ($service->errors()->getMessages()['error'] as $error) {

@@ -32,12 +32,18 @@
                     <div class="row flex-wrap">
                         <div class="col-12 col-md-2">
                             <div class="logs-table-cell">
-                                {!! $log->prompt_id ? $log->prompt->displayName : '---' !!}
+                                {!! $log->prompt_id ? $log->prompt->displayName : '<span class="badge alert-light">Claim</span>' !!}
                             </div>
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="logs-table-cell">
-                                <span class="ubt-texthide"><a href="{{ $log->url }}">{{ $log->url }}</a></span>
+                                <span class="ubt-texthide">
+                                    @if ($log->gallerySubmission)
+                                        <a class="btn btn-sm btn-light" href="{{ $log->gallerySubmission->url }}">Gallery Submission #{{ $log->gallerySubmission->id }}</a>
+                                    @else
+                                        <a href="{{ $log->url }}">{{ $log->url }}</a>
+                                    @endif
+                                </span>
                             </div>
                         </div>
                         <div class="col-6 col-md-5">
@@ -56,4 +62,5 @@
         </div>
     </div>
     {!! $logs->render() !!}
+    <div class="text-center mt-4 small text-muted">{{ $logs->total() }} result{{ $logs->total() == 1 ? '' : 's' }} found.</div>
 @endsection

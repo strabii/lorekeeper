@@ -21,6 +21,7 @@
         </div>
 
         {!! $submissions->render() !!}
+        <div class="text-center mt-4 small text-muted">{{ $submissions->total() }} result{{ $submissions->total() == 1 ? '' : 's' }} found.</div>
     @else
         <p>No submissions found!</p>
     @endif

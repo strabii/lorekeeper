@@ -10,6 +10,7 @@ use App\Models\Prompt\Prompt;
 use App\Models\Submission\Submission;
 use App\Models\User\User;
 use App\Traits\Commentable;
+use Auth;
 
 class GallerySubmission extends Model {
     use Commentable;
@@ -568,7 +569,7 @@ class GallerySubmission extends Model {
     public function getPromptSubmissionsAttribute() {
         // Only returns submissions which are viewable to everyone,
         // but given that this is for the sake of public display, that's fine
-        return Submission::viewable()->whereNotNull('prompt_id')->where('url', 'like', '%'.request()->getHost().'/gallery/view/'.$this->id)->get();
+        return Submission::viewable()->whereNotNull('prompt_id')->where('url', 'like', '%'.request()->getHost().'/gallery/view/'.$this->id)->orWhereJsonContains('data->gallery_submission_id', (string) $this->id)->get();
     }
 
     /**
@@ -593,6 +594,17 @@ class GallerySubmission extends Model {
         } else {
             return strip_tags(substr($this->parsed_text, 0, 500)).(strlen($this->parsed_text) > 500 ? '...' : '');
         }
+    }
+
+    /**
+     * Get and check if prompt this gallery submission is attached to is open for submissions.
+     *
+     * @return array
+     */
+    public function getAttachedPromptActiveAttribute() {
+        // Only returns submissions which are viewable to everyone,
+        // but given that this is for the sake of public display, that's fine
+        return Prompt::active()->find($this->prompt_id);
     }
 
     /**********************************************************************************************
@@ -640,4 +652,17 @@ class GallerySubmission extends Model {
 
         return $voteData;
     }
+
+    /**
+     * Gets a GalleryCollaborator count associated with this gallery submission.
+     *
+     * @return array
+     */
+    public function getGalleryCollaboratorCount($user = false) {
+        if ($user == true) {
+            return count(GalleryCollaborator::where('gallery_submission_id', $this->id)->where('user_id', Auth::user()->id)->where('has_approved', 1)->get());
+        }
+        return count(GalleryCollaborator::where('gallery_submission_id', $this->id)->where('has_approved', 1)->get());
+    }
+
 }
